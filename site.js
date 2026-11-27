@@ -55,10 +55,22 @@ function lineChart(box, lines, opts) {
   const ns = 'http://www.w3.org/2000/svg', el = (t, a) => { const e = document.createElementNS(ns, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
   const svg = el('svg', {width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': opts.title || 'Chart'});
   for (const t of yt) { svg.append(el('line', {x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), class: 'grid'})); const tx = el('text', {x: m.l - 8, y: Y(t) + 4, 'text-anchor': 'end', class: 'tick'}); tx.textContent = opts.yFmt(t); svg.append(tx); }
-  const every = Math.max(1, Math.ceil(xs.length / Math.max(2, Math.floor((W - m.l - m.r) / 70))));
-  // The first and last labels sit inside the chart, so a long one (a version) is never clipped at the edge.
-  xs.forEach((x, i) => { if (i % every && i !== xs.length - 1) return; const anchor = xs.length > 1 && i === 0 ? 'start' : i === xs.length - 1 && xs.length > 1 ? 'end' : 'middle';
-    const tx = el('text', {x: X(x), y: H - 12, 'text-anchor': anchor, class: 'tick'}); tx.textContent = opts.xName(x); svg.append(tx); });
+  // X labels placed by the room they take: the first starts at its point and the last ends at its own (so neither is
+  // clipped), and a label in between is drawn only when it clears the one before it and the last, with a gap.
+  const GAP = 10, labelWidth = text => text.length * 6.6;  // 11px Nunito digits and points, a little generous
+  const span = (x, i) => {
+    const text = opts.xName(x), w = labelWidth(text);
+    const anchor = xs.length === 1 ? 'middle' : i === 0 ? 'start' : i === xs.length - 1 ? 'end' : 'middle';
+    const left = anchor === 'start' ? X(x) : anchor === 'end' ? X(x) - w : X(x) - w / 2;
+    return {x, text, anchor, left, right: left + w};
+  };
+  const last = span(xs[xs.length - 1], xs.length - 1), kept = [];
+  xs.slice(0, -1).forEach((x, i) => {
+    const s = span(x, i);
+    if ((kept.length && s.left < kept[kept.length - 1].right + GAP) || s.right + GAP > last.left) return;
+    kept.push(s);
+  });
+  for (const s of [...kept, last]) { const tx = el('text', {x: X(s.x), y: H - 12, 'text-anchor': s.anchor, class: 'tick'}); tx.textContent = s.text; svg.append(tx); }
   for (const l of lines) {
     if (!l.points.length) continue;
     svg.append(el('path', {d: l.points.map((p, k) => (k ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' '), fill: 'none', stroke: l.colour, 'stroke-width': l.width || 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', 'stroke-dasharray': l.dash || null}));

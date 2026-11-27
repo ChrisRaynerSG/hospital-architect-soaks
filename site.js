@@ -190,7 +190,8 @@ function runsView() {
   requestAnimationFrame(() => lineChart(box, lines, {xName: d => 'Day ' + d, yFmt: v => fmt(v, kind), title: figName(S.runFigure) + ' by day'}));
   out.push(h('div', {class: 'panel'}, h('div', {class: 'bar'}, h('h2', {}, 'Day by day'), figureSelect(S.runFigure, f => { S.runFigure = f; render(); }, ids)), legend(lines), box),
     h('div', {class: 'cards'}, picked.map((r, i) => h('div', {class: 'card'}, h('div', {class: 'bar'}, h('span', {class: 'sw', style: `background:${seedColour(i)}`}), h('b', {}, `${r.run.version} · seed ${r.run.seed}`), h('span', {class: 'hint'}, r.run.date)),
-      h('div', {class: 'hint'}, `${r.run.hospital} hospital: ${r.run.beds} beds, ${r.run.staffTotal} staff; ${r.run.daysRun} days${r.run.intakeMode ? '; ' + r.run.intakeMode : ''}.`),
+      h('div', {class: 'hint'}, `${r.run.hospital} hospital: ${r.run.beds} beds, ${r.run.staffTotal} staff; ${r.run.daysRun} days${r.run.intakeMode ? '; ' + r.run.intakeMode : ''}. Commit ${r.run.commit}.`),
+      r.run.versionNote ? h('div', {class: 'hint'}, 'Shown as ' + r.run.version + ': ' + r.run.versionNote) : null,
       h('div', {class: 'bar'}, h('span', {class: 'tag ' + (r.run.finished ? 'good' : 'warn')}, r.run.finished ? 'Finished' : 'Unfinished'),
         h('span', {class: 'tag ' + (r.errorCount ? 'bad' : '')}, `${r.errorCount} errors`), h('span', {class: 'tag'}, `${r.stallCount} stalls`), h('span', {class: 'tag'}, `${r.secondsPerDay} s a game day`))))));
   return out;
